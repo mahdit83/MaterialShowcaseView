@@ -59,6 +59,7 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
     private boolean mWasDismissed = false, mWasSkipped = false;
     private int mShapePadding = DEFAULT_SHAPE_PADDING;
     private int tooltipMargin = DEFAULT_TOOLTIP_MARGIN;
+    private String mKey ="";
 
     private View mContentBox;
     private TextView mTitleTextView;
@@ -114,6 +115,13 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
         init(context);
     }
 
+    public String getKey() {
+        return mKey;
+    }
+
+    public void setKey(String mKey) {
+        this.mKey = mKey;
+    }
 
     private void init(Context context) {
         setWillNotDraw(false);
@@ -680,6 +688,11 @@ public class MaterialShowcaseView extends FrameLayout implements View.OnTouchLis
 
         public Builder setSequence(Boolean isSequence) {
             showcaseView.setIsSequence(isSequence);
+            return this;
+        }
+
+        public Builder setTagKey(String tag){
+            showcaseView.setKey(tag);
             return this;
         }
 

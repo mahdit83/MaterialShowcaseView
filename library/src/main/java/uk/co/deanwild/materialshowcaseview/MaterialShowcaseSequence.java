@@ -3,7 +3,11 @@ package uk.co.deanwild.materialshowcaseview;
 import android.app.Activity;
 import android.view.View;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 
@@ -11,8 +15,9 @@ public class MaterialShowcaseSequence implements IDetachedListener {
 
     PrefsManager mPrefsManager;
     Queue<MaterialShowcaseView> mShowcaseQueue;
-    private boolean mSingleUse = false;
+    List<Map<String, CaseViewCallback>> mCallbacksMap;
     Activity mActivity;
+    private boolean mSingleUse = false;
     private ShowcaseConfig mConfig;
     private int mSequencePosition = 0;
 
@@ -22,6 +27,7 @@ public class MaterialShowcaseSequence implements IDetachedListener {
     public MaterialShowcaseSequence(Activity activity) {
         mActivity = activity;
         mShowcaseQueue = new LinkedList<>();
+        mCallbacksMap = new ArrayList<>();
     }
 
     public MaterialShowcaseSequence(Activity activity, String sequenceID) {
@@ -30,11 +36,16 @@ public class MaterialShowcaseSequence implements IDetachedListener {
     }
 
     public MaterialShowcaseSequence addSequenceItem(View targetView, String content, String dismissText) {
-        addSequenceItem(targetView, "", content, dismissText);
+        addSequenceItem(targetView, "", content, dismissText, null);
         return this;
     }
 
-    public MaterialShowcaseSequence addSequenceItem(View targetView, String title, String content, String dismissText) {
+    public MaterialShowcaseSequence addSequenceItem(View targetView, String content, String dismissText, CaseViewCallback caseViewCallback) {
+        addSequenceItem(targetView, "", content, dismissText, caseViewCallback);
+        return this;
+    }
+
+    public MaterialShowcaseSequence addSequenceItem(View targetView, String title, String content, String dismissText, CaseViewCallback caseViewCallback) {
 
         MaterialShowcaseView sequenceItem = new MaterialShowcaseView.Builder(mActivity)
                 .setTarget(targetView)
@@ -42,10 +53,16 @@ public class MaterialShowcaseSequence implements IDetachedListener {
                 .setDismissText(dismissText)
                 .setContentText(content)
                 .setSequence(true)
+                .setTagKey(String.valueOf(targetView.getId()))
                 .build();
 
         if (mConfig != null) {
             sequenceItem.setConfig(mConfig);
+        }
+        if (caseViewCallback != null) {
+            Map<String, CaseViewCallback> callbackMap = new HashMap<>();
+            callbackMap.put(sequenceItem.getKey(), caseViewCallback);
+            mCallbacksMap.add(callbackMap);
         }
 
         mShowcaseQueue.add(sequenceItem);
@@ -123,6 +140,17 @@ public class MaterialShowcaseSequence implements IDetachedListener {
             if (mOnItemShownListener != null) {
                 mOnItemShownListener.onShow(sequenceItem, mSequencePosition);
             }
+
+
+            String key = String.valueOf(sequenceItem.getKey());
+            for (Map<String, CaseViewCallback> stringCaseViewCallbackMap : mCallbacksMap) {
+                if (stringCaseViewCallbackMap.get(key) != null) {
+                    CaseViewCallback callback = stringCaseViewCallbackMap.get(key);
+                    callback.onDone(key);
+                }
+            }
+
+
         } else {
             /**
              * We've reached the end of the sequence, save the fired state
@@ -154,7 +182,6 @@ public class MaterialShowcaseSequence implements IDetachedListener {
         }
     }
 
-
     @Override
     public void onShowcaseDetached(MaterialShowcaseView showcaseView, boolean wasDismissed, boolean wasSkipped) {
 
@@ -180,7 +207,7 @@ public class MaterialShowcaseSequence implements IDetachedListener {
             showNextItem();
         }
 
-        if(wasSkipped){
+        if (wasSkipped) {
             if (mOnItemDismissedListener != null) {
                 mOnItemDismissedListener.onDismiss(showcaseView, mSequencePosition);
             }
@@ -199,6 +226,10 @@ public class MaterialShowcaseSequence implements IDetachedListener {
 
     public void setConfig(ShowcaseConfig config) {
         this.mConfig = config;
+    }
+
+    public interface CaseViewCallback {
+        void onDone(String uniqueId);
     }
 
     public interface OnSequenceItemShownListener {

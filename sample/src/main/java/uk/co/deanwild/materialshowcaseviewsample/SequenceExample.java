@@ -2,6 +2,7 @@ package uk.co.deanwild.materialshowcaseviewsample;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -72,17 +73,21 @@ public class SequenceExample extends AppCompatActivity implements View.OnClickLi
 
         sequence.setConfig(config);
 
-        sequence.addSequenceItem(mButtonOne, "This is button one", "GOT IT");
+        sequence.addSequenceItem(mButtonOne, "This is button one", "GOT IT", new MaterialShowcaseSequence.CaseViewCallback() {
+            @Override
+            public void onDone(String uniqueId) {
+                Log.i("tag", "Callback for mButtonOne sequence done. example you can do some scrolling here to reach next view.");
+            }
+        });
 
-        sequence.addSequenceItem(
-                new MaterialShowcaseView.Builder(this)
-                        .setSkipText("SKIP")
-                        .setTarget(mButtonTwo)
-                        .setDismissText("GOT IT")
-                        .setContentText("This is button two")
-                        .withRectangleShape(true)
-                        .build()
-        );
+        sequence.addSequenceItem(mButtonTwo, "This is button two", "GOT IT", new MaterialShowcaseSequence.CaseViewCallback() {
+            @Override
+            public void onDone(String uniqueId) {
+                Log.i("tag", "Callback for mButtonTwo sequence done. example you can do some scrolling here to reach next view.");
+
+            }
+        });
+
 
         sequence.addSequenceItem(
                 new MaterialShowcaseView.Builder(this)
